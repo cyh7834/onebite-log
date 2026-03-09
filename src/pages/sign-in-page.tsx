@@ -92,9 +92,15 @@ export default function SignInPage() {
           GitHub 계정으로 로그인
         </Button>
       </div>
-      <div>
+      <div className="flex flex-col gap-2">
         <Link to={"/sign-up"} className="text-muted-foreground hover:underline">
           계정이 없으시다면? 회원가입
+        </Link>
+        <Link
+          to={"/forget-password"}
+          className="text-muted-foreground hover:underline"
+        >
+          비밀번호를 잊으셨나요?
         </Link>
       </div>
     </div>
