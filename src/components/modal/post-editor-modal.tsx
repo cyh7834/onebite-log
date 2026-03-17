@@ -2,13 +2,19 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useCreatePost } from "@/hooks/mutations/post/use-create-post";
 import { usePostEditorModal } from "@/store/post-editor-modal";
-import { ImageIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ImageIcon, XIcon } from "lucide-react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
+import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
+
+type Image = {
+  file: File;
+  previewUrl: string;
+};
 
 export default function PostEditorModal() {
   const { isOpen, close } = usePostEditorModal();
-  const {mutate: createPost, isPending: isCreatePostPending} = useCreatePost({
+  const { mutate: createPost, isPending: isCreatePostPending } = useCreatePost({
     onSuccess: () => {
       close();
     },
@@ -18,9 +24,11 @@ export default function PostEditorModal() {
       });
     },
   });
-  
+
   const [content, setContent] = useState("");
+  const [images, setImages] = useState<Image[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCloseModal = () => {
     close();
@@ -30,7 +38,28 @@ export default function PostEditorModal() {
     if (content.trim() === "") return;
 
     createPost(content);
-  }
+  };
+
+  const handleSelectImages = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+
+      files.forEach((file) => {
+        setImages((prev) => [
+          ...prev,
+          { file, previewUrl: URL.createObjectURL(file) },
+        ]);
+      });
+    }
+
+    e.target.value = "";
+  };
+
+  const handleDeleteImage = (image: Image) => {
+    setImages((prevImages) =>
+      prevImages.filter((item) => item.previewUrl !== image.previewUrl),
+    );
+  };
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -44,24 +73,67 @@ export default function PostEditorModal() {
     if (!isOpen) return;
     textareaRef.current?.focus();
     setContent("");
+    setImages([]);
   }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleCloseModal}>
       <DialogContent className="max-h-[90vh]">
         <DialogTitle>포스트 작성</DialogTitle>
-        <textarea disabled={isCreatePostPending}
+        <textarea
+          disabled={isCreatePostPending}
           ref={textareaRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           className="max-h-125 min-h-25 focus:outline-none"
           placeholder="무슨 일이 있었나요?"
         />
-        <Button disabled={isCreatePostPending} variant={"outline"} className="cursor-pointer">
+        <input
+          onChange={handleSelectImages}
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+        ></input>
+        {images.length > 0 && (
+          <Carousel>
+            <CarouselContent>
+              {images.map((image) => (
+                <CarouselItem className="basis-2/5" key={image.previewUrl}>
+                  <div className="relative">
+                    <img
+                      src={image.previewUrl}
+                      className="h-full w-full rounded-sm object-cover"
+                    ></img>
+                    <div
+                      onClick={() => handleDeleteImage(image)}
+                      className="absolute top-0 right-0 m-1 cursor-pointer rounded-full bg-black/30 p-1"
+                    >
+                      <XIcon className="h-4 w-4 text-white"></XIcon>
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        )}
+        <Button
+          onClick={() => {
+            fileInputRef.current?.click();
+          }}
+          disabled={isCreatePostPending}
+          variant={"outline"}
+          className="cursor-pointer"
+        >
           <ImageIcon />
           이미지 추가
         </Button>
-        <Button disabled={isCreatePostPending} onClick={handleCreatePostClick} className="cursor-pointer">
+        <Button
+          disabled={isCreatePostPending}
+          onClick={handleCreatePostClick}
+          className="cursor-pointer"
+        >
           저장
         </Button>
       </DialogContent>
