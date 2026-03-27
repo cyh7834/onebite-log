@@ -36,7 +36,7 @@ export default function PostItem(post: Post) {
         {/* 1-2. 수정/삭제 버튼 */}
         <div className="text-muted-foreground flex text-sm">
           <EditPostButton {...post}></EditPostButton>
-          <DeletePostButton></DeletePostButton>
+          <DeletePostButton id={post.id}></DeletePostButton>
         </div>
       </div>
 
