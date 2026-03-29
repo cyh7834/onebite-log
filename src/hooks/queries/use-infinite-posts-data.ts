@@ -1,10 +1,12 @@
 import { fetchPosts } from "@/api/post";
 import { QUERY_KEYS } from "@/lib/constants";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
 const PAGE_SIZE = 5;
 
 export function useInfinitePostsData() {
+    const queryClient = useQueryClient();
+
     return useInfiniteQuery({
         queryKey: QUERY_KEYS.post.list,
         queryFn: async ({pageParam}) => {
@@ -12,8 +14,11 @@ export function useInfinitePostsData() {
             const to = from + PAGE_SIZE - 1;
 
             const posts = await fetchPosts({from, to});
+            posts.forEach((post) => {
+                queryClient.setQueryData(QUERY_KEYS.post.byId(post.id), post);
+            });
 
-            return posts;
+            return posts.map((post) => post.id);
         },
         initialPageParam: 0,
         getNextPageParam: (lastPage, allPages) => {
