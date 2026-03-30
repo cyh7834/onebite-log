@@ -26,5 +26,8 @@ export function useInfinitePostsData() {
                 return undefined;
 
             return allPages.length;
-    } });
+    },
+
+    staleTime: Infinity, // post 데이터가 stale 상태로 변하지 않아서 재요청을 하지 않음
+ });
 }
