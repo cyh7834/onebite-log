@@ -94,6 +94,7 @@ export default function PostItem({ postId }: { postId: number }) {
         <LikePostButton
           id={post.id}
           likeCount={post.like_count}
+          isLiked={post.isLiked}
         ></LikePostButton>
 
         {/* 3-2. 댓글 버튼 */}
