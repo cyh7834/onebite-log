@@ -32,3 +32,12 @@ export async function updateComment({id, content}: {id: number; content: string;
 
     return data;
 }
+
+export async function deleteComment(id: number) {
+    const {data, error} = await supabase.from("comment").delete().eq("id", id).select().single();
+
+    if (error) throw error;
+
+    return data;
+}
+
