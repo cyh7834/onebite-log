@@ -1,12 +1,21 @@
 import { deleteComment } from "@/api/comment";
-import type { UseMutationCallback } from "@/types";
-import { useMutation } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/lib/constants";
+import type { Comment, UseMutationCallback } from "@/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useDeleteComment(callbacks?: UseMutationCallback) {
+    const quertyClient = useQueryClient();
+
     return useMutation({
         mutationFn: deleteComment,
-        onSuccess: () => {
+        onSuccess: (deletedComment) => {
             if (callbacks?.onSuccess) callbacks.onSuccess();
+
+            quertyClient.setQueryData<Comment[]>(QUERY_KEYS.comment.post(deletedComment.post_id), (comments) => {
+                if (!comments) throw new Error("댓글이 캐시 데이터에 보관되어있지 않습니다.");
+
+                return comments.filter((comment) => comment.id !== deletedComment.id);
+            });
         },
         onError: (error) => {
             if (callbacks?.onError) callbacks.onError(error);
