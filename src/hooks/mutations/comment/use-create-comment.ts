@@ -20,7 +20,7 @@ export function useCreateComment(callbacks?: UseMutationCallback) {
 
                 if (!profile) throw new Error("프로필을 찾을 수 없습니다.");
 
-                return [{...newComment, author: profile}, ...comments];
+                return [...comments, {...newComment, author: profile}];
             })
         },
         onError: (error) => {
