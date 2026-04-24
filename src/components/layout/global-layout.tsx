@@ -3,6 +3,7 @@ import logo from "@/assets/logo.png";
 import defaultAvatar from "@/assets/default-avatar.png";
 import { SunIcon } from "lucide-react";
 import ProfileButton from "./header/profile-button";
+import ThemeButton from "./header/theme-button";
 export default function GlobalLayout() {
   return (
     <div className="flex min-h-[100vh] flex-col">
@@ -17,9 +18,7 @@ export default function GlobalLayout() {
             <div className="font-bold">한입 로그</div>
           </Link>
           <div className="flex items-center gap-5">
-            <div className="hover:bg-muted cursor-pointer rounded-full p-2">
-              <SunIcon></SunIcon>
-            </div>
+            <ThemeButton />
             <ProfileButton />
           </div>
         </div>
