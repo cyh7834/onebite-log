@@ -1,54 +1,31 @@
-# React + TypeScript + Vite
+# 기능별 동작 흐름도
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+아래 내용은 이 프로젝트에서 구현된 주요 기능이 실제로 어떻게 동작하는지를, 상태 감지와 리렌더링 관점까지 포함해서 정리한 문서입니다.
 
-Currently, two official plugins are available:
+## 1. 세션 전역 상태 관리 흐름
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+핵심은 `SessionProvider`가 Supabase 인증 상태 변화를 감지하고, 그 값을 Zustand store에 넣으면, `useSession()`을 쓰는 컴포넌트가 자동으로 다시 렌더링된다는 점입니다.
 
-## Expanding the ESLint configuration
+```text
+앱 시작
+→ App에서 SessionProvider가 가장 바깥에서 마운트됨
+→ SessionProvider의 useEffect 실행
+→ supabase.auth.onAuthStateChange(...) 등록
+→ 이제 Supabase Auth 상태 변화를 계속 구독하는 상태가 됨
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+사용자가 로그인 / 로그아웃 / 세션 복구됨
+→ Supabase가 onAuthStateChange 콜백 실행
+→ 콜백 인자로 최신 session 전달
+→ SessionProvider가 setSession(session) 호출
+→ Zustand의 useSessionStore 내부 state.session 값 변경
+→ state.isLoaded도 true로 변경
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+그다음
+→ useSession()을 사용하는 모든 컴포넌트는
+  useSessionStore((store) => store.session) 형태로 session만 구독 중
+→ Zustand가 "session 값이 바뀌었다"고 감지
+→ 그 값을 구독한 컴포넌트만 리렌더링
+→ MemberOnlyLayout, GuestOnlyLayout, ProfileButton 등이 새 session 기준으로 다시 판단
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+즉, 내부의 `useSessionStore(selector)`가 Zustand store를 구독하고 있어서 자동 반응하는 구조입니다.
