@@ -29,3 +29,38 @@
 ```
 
 즉, 내부의 `useSessionStore(selector)`가 Zustand store를 구독하고 있어서 자동 반응하는 구조입니다.
+
+## 2. 로그인 기능 흐름
+
+로그인은 `버튼 클릭 → mutation 실행 → Supabase 로그인 → auth 상태 변경 → SessionProvider 감지 → 전역 session 갱신 → 보호 라우트 통과` 흐름입니다.
+
+```text
+사용자가 SignInPage에서 이메일/비밀번호 입력
+→ 로그인 버튼 클릭
+→ handleSignInWithPasswordClick 실행
+→ useSignInWithPassword의 mutate 호출
+→ TanStack Query mutationFn으로 signInWithPassword 실행
+→ src/api/auth.ts의 supabase.auth.signInWithPassword(...) 호출
+
+로그인 성공
+→ Supabase 내부 세션 생성
+→ Supabase Auth 상태가 바뀜
+→ onAuthStateChange 구독 중이던 SessionProvider가 이 변화를 감지
+→ setSession(session) 호출
+→ Zustand store의 session 값이 null에서 실제 세션 객체로 바뀜
+→ useSession()을 쓰는 MemberOnlyLayout 리렌더링
+→ 이제 if (!session) 조건이 false가 됨
+→ Navigate가 아니라 Outlet 렌더링
+→ 회원 전용 페이지 접근 가능
+```
+
+실패 시:
+
+```text
+로그인 실패
+→ mutation onError 실행
+→ toast로 에러 출력
+→ password 초기화
+→ session 값은 그대로 null
+→ MemberOnlyLayout은 계속 접근 차단
+```
