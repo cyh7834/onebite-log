@@ -64,3 +64,34 @@
 → session 값은 그대로 null
 → MemberOnlyLayout은 계속 접근 차단
 ```
+
+## 3. 회원가입 기능 흐름
+
+회원가입도 mutation 기반이지만, 핵심은 `Auth 계정 생성`과 `앱 내부 profile row 생성`이 분리되어 있다는 점입니다.
+
+```text
+사용자가 SignUpPage에서 이메일/비밀번호 입력
+→ 회원가입 버튼 클릭
+→ useSignUp의 mutate 호출
+→ supabase.auth.signUp(...) 실행
+→ Supabase Auth 계정 생성
+
+그 직후
+→ 인증 상태가 유효해지면 SessionProvider가 감지
+→ session store 갱신
+
+하지만
+→ profile 테이블 row는 회원가입 시점에 바로 만들지 않음
+→ 나중에 useProfileData(session.user.id)가 호출될 때 profile 조회
+→ 내 프로필인데 row가 없어서 PGRST116 에러 발생
+→ useProfileData 내부에서 createProfile(userId) 자동 호출
+→ 랜덤 닉네임으로 profile row 생성
+→ 이후부터 프로필 정보 정상 사용 가능
+```
+
+즉 이 프로젝트는:
+
+- `Auth 계정 생성`은 Supabase Auth
+- `앱 사용자 프로필 생성`은 profile 테이블 첫 조회 시 보정
+
+으로 나뉘어 있습니다.
