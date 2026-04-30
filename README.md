@@ -95,3 +95,33 @@
 - `앱 사용자 프로필 생성`은 profile 테이블 첫 조회 시 보정
 
 으로 나뉘어 있습니다.
+
+## 4. 라우트 보호 흐름
+
+이 부분은 세션 구독의 결과가 가장 눈에 띄게 보이는 곳입니다.
+
+```text
+사용자가 어떤 URL로 이동
+→ root-route.tsx가 현재 경로에 맞는 Route 선택
+→ 회원 전용 페이지면 MemberOnlyLayout 먼저 렌더링
+→ MemberOnlyLayout 안에서 useSession() 호출
+→ Zustand store의 session 값 구독
+
+session이 null이면
+→ if (!session) return <Navigate to="/sign-in" />
+→ 로그인 페이지로 강제 이동
+
+session이 있으면
+→ return <Outlet />
+→ 실제 페이지(IndexPage, PostDetailPage, ProfileDetailPage) 렌더링
+```
+
+비회원 전용 라우트는 반대로 동작합니다.
+
+```text
+GuestOnlyLayout 렌더링
+→ useSession() 호출
+→ session이 있으면 이미 로그인된 상태
+→ / 로 리다이렉트
+→ session이 없으면 sign-in, sign-up 페이지 허용
+```
