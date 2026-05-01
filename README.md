@@ -98,7 +98,7 @@
 
 ## 4. 라우트 보호 흐름
 
-이 부분은 세션 구독의 결과가 가장 눈에 띄게 보이는 곳입니다.
+구독의 결과로
 
 ```text
 사용자가 어떤 URL로 이동
@@ -125,3 +125,28 @@ GuestOnlyLayout 렌더링
 → / 로 리다이렉트
 → session이 없으면 sign-in, sign-up 페이지 허용
 ```
+
+## 5. TanStack Query 서버 상태 관리 흐름
+
+여기서 중요한 건, Zustand는 클라이언트 전역 상태를 관리하고, 실제 DB 데이터는 TanStack Query가 관리한다는 점입니다.
+
+```text
+컴포넌트에서 useQuery / useInfiniteQuery 호출
+→ queryKey 기준으로 캐시 확인
+→ 캐시가 없거나 새로 필요하면 queryFn 실행
+→ Supabase에서 데이터 조회
+→ 응답을 TanStack Query 캐시에 저장
+→ 해당 queryKey를 구독하는 컴포넌트 렌더링
+
+나중에 mutation 성공
+→ queryClient.setQueryData(...) 또는 resetQueries(...) 실행
+→ 캐시 갱신
+→ 해당 캐시를 읽는 컴포넌트 자동 리렌더링
+```
+
+즉 여기서도 핵심은 `구독`입니다.
+
+- Zustand는 store 구독
+- TanStack Query는 query cache 구독
+
+둘 다 값이 바뀌면 React 컴포넌트가 자동으로 다시 그려집니다.
