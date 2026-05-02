@@ -150,3 +150,33 @@ GuestOnlyLayout 렌더링
 - TanStack Query는 query cache 구독
 
 둘 다 값이 바뀌면 React 컴포넌트가 자동으로 다시 그려집니다.
+
+## 6. 포스트 목록 조회 흐름
+
+이 프로젝트의 포스트는 일반적인 `리스트에 모든 데이터 저장` 방식보다 한 단계 더 구조화되어 있습니다.
+
+```text
+IndexPage 또는 ProfileDetailPage 진입
+→ PostFeed 렌더링
+→ useInfinitePostsData(authorId?) 호출
+→ useInfiniteQuery 실행
+→ 현재 pageParam 기준 from, to 계산
+→ fetchPosts({ from, to, userId, authorId }) 호출
+→ Supabase에서 post + author profile + 현재 유저의 like 여부 조회
+
+응답 도착
+→ posts 배열을 받음
+→ 각 post를 queryClient.setQueryData(post.byId(post.id), post)로 개별 캐시에 저장
+→ infinite query의 page 데이터에는 post 전체가 아니라 post.id 배열만 저장
+
+렌더링
+→ PostFeed는 페이지별 postId만 순회
+→ 각 PostItem이 usePostByIdData(postId)로 자기 포스트 상세 캐시를 읽음
+→ 상세 페이지에서는 enabled: true라서 직접 조회
+→ 피드에서는 이미 캐시에 있으므로 enabled: false로 사용
+```
+
+이 구조의 장점은:
+
+- 같은 포스트를 피드와 상세 페이지가 공유 가능
+- 좋아요/수정 시 `post.byId`만 바꿔도 여러 화면이 함께 반영됨
