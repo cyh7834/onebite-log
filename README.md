@@ -180,3 +180,35 @@ IndexPage 또는 ProfileDetailPage 진입
 
 - 같은 포스트를 피드와 상세 페이지가 공유 가능
 - 좋아요/수정 시 `post.byId`만 바꿔도 여러 화면이 함께 반영됨
+
+## 7. 포스트 생성 흐름
+
+포스트 생성은 DB insert와 Storage 업로드가 같이 엮여 있습니다.
+
+```text
+글쓰기 버튼 클릭
+→ Zustand postEditorModal store에서 openCreate 실행
+→ PostEditorModal 열림
+
+사용자가 내용 입력, 이미지 선택
+→ 저장 버튼 클릭
+→ useCreatePost mutation 실행
+→ mutationFn으로 createPostWithImages 호출
+
+createPostWithImages 내부
+1. 먼저 post 테이블에 content로 row 생성
+2. 이미지가 없으면 바로 post 반환
+3. 이미지가 있으면 각 파일을 Supabase Storage에 업로드
+4. 업로드 완료 후 publicUrl 배열 생성
+5. 다시 post 테이블의 image_urls 필드 update
+6. 최종 updatedPost 반환
+
+만약 중간에 업로드 실패
+→ 이미 생성된 post를 deletePost로 삭제
+→ 에러 throw
+
+mutation 성공
+→ queryClient.resetQueries({ queryKey: post.list })
+→ 포스트 목록 다시 로드
+→ 모달 닫힘
+```
