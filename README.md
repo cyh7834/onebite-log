@@ -212,3 +212,27 @@ mutation 성공
 → 포스트 목록 다시 로드
 → 모달 닫힘
 ```
+
+## 8. 포스트 수정 흐름
+
+포스트 수정은 새로 목록을 다시 받아오기보다 개별 캐시를 직접 수정합니다.
+
+```text
+수정 버튼 클릭
+→ Zustand postEditorModal store의 openEdit 실행
+→ postId, content, imageUrls가 store에 저장됨
+→ PostEditorModal이 EDIT 모드로 열림
+
+사용자가 내용 수정 후 저장
+→ useUpdatePost mutation 실행
+→ updatePost({ id, content }) 호출
+→ Supabase post row update
+
+성공
+→ queryClient.setQueryData(post.byId(updatedPost.id), ...)
+→ 기존 캐시 포스트에 수정된 값 merge
+→ PostItem, 상세 페이지가 같은 캐시를 쓰므로 화면 즉시 반영
+→ 모달 닫힘
+```
+
+핵심은 `resetQueries`가 아니라 `setQueryData`라서 더 즉각적이라는 점입니다.
