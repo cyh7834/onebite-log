@@ -236,3 +236,21 @@ mutation 성공
 ```
 
 핵심은 `resetQueries`가 아니라 `setQueryData`라서 더 즉각적이라는 점입니다.
+
+## 9. 포스트 삭제 흐름
+
+```text
+삭제 버튼 클릭
+→ Alert 모달 open
+→ 사용자가 확인 클릭
+→ useDeletePost mutation 실행
+→ deletePost(id) 호출
+→ post row 삭제
+
+성공 후
+→ image_urls가 있으면 deleteImagesInPath(author_id/post_id) 실행
+→ Storage 파일 정리
+→ queryClient.resetQueries({ queryKey: post.list })
+→ 목록 재조회
+→ 상세 페이지에 있었다면 상위 로직에 따라 이동 또는 목록 반영
+```
