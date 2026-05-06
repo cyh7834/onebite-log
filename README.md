@@ -254,3 +254,36 @@ mutation 성공
 → 목록 재조회
 → 상세 페이지에 있었다면 상위 로직에 따라 이동 또는 목록 반영
 ```
+
+## 10. 좋아요 기능 흐름
+
+좋아요는 `낙관적 업데이트`를 쓰기 때문에 사용자가 가장 빠르게 반응을 체감하는 기능입니다.
+
+```text
+하트 버튼 클릭
+→ LikePostButton에서 togglePostLike({ postId, userId }) 호출
+→ useTogglePostLike mutation 실행
+
+onMutate 먼저 실행
+→ 현재 post.byId(postId) 쿼리 취소
+→ 이전 포스트 캐시 prevPost 백업
+→ queryClient.setQueryData로 즉시 캐시 변경
+   isLiked: 반전
+   like_count: +1 또는 -1
+
+즉시 UI 반영
+→ 하트 색상과 숫자가 바로 바뀜
+
+그다음 서버 요청
+→ Supabase RPC toggle_post_like(p_post_id, p_user_id) 호출
+→ DB에서 like row 토글 + like_count 반영
+
+성공
+→ 그대로 유지
+
+실패
+→ onError에서 prevPost로 롤백
+→ 화면 값 복원
+```
+
+즉, 사용자는 서버 응답을 기다리지 않고 먼저 결과를 봅니다.
