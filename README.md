@@ -287,3 +287,30 @@ onMutate 먼저 실행
 ```
 
 즉, 사용자는 서버 응답을 기다리지 않고 먼저 결과를 봅니다.
+
+## 11. 프로필 조회와 자동 생성 흐름
+
+이 부분은 이 프로젝트에서 꽤 중요한 설계 포인트입니다.
+
+```text
+헤더 프로필 버튼 / 프로필 페이지 / 댓글 작성 등에 profile 필요
+→ useProfileData(userId) 호출
+→ TanStack Query가 profile.byId(userId) 캐시 확인
+→ 없으면 fetchProfile(userId) 실행
+→ Supabase profile 테이블 조회
+
+정상 조회되면
+→ 캐시 저장
+→ UI 렌더링
+
+그런데
+→ 현재 로그인한 내 userId인데 profile row가 없음
+→ fetchProfile에서 PGRST116 발생
+→ useProfileData 내부 catch 진입
+→ isMine이면 createProfile(userId) 호출
+→ 랜덤 닉네임으로 profile row 생성
+→ 그 결과를 캐시에 저장
+→ 이후 UI 정상 렌더링
+```
+
+즉 `회원가입했다고 앱 프로필이 무조건 있는 건 아니다`라는 상황을 프론트 쿼리 레벨에서 복구하고 있습니다.
