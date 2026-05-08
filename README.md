@@ -314,3 +314,28 @@ onMutate 먼저 실행
 ```
 
 즉 `회원가입했다고 앱 프로필이 무조건 있는 건 아니다`라는 상황을 프론트 쿼리 레벨에서 복구하고 있습니다.
+
+## 12. 프로필 수정 흐름
+
+```text
+내 프로필 페이지에서 "프로필 수정" 클릭
+→ Zustand profileEditorModal store open
+→ ProfileEditorModal 열림
+→ useProfileData(session.user.id)로 기존 프로필 불러옴
+→ 닉네임, bio, avatar 표시
+
+사용자가 수정 후 저장
+→ useUpdateProfile mutation 실행
+→ updateProfile({ userId, nickname, bio, avatarImageFile }) 호출
+
+updateProfile 내부
+→ 새 아바타 파일이 있으면 기존 avatar 경로 이미지 삭제
+→ 새 파일을 Storage 업로드
+→ publicUrl 획득
+→ profile 테이블 update
+
+성공
+→ queryClient.setQueryData(profile.byId(updatedProfile.id), updatedProfile)
+→ 헤더 프로필 이미지, 프로필 상세 화면 등 같은 캐시를 쓰는 UI가 즉시 반영
+→ 모달 닫힘
+```
