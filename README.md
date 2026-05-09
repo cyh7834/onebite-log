@@ -339,3 +339,26 @@ updateProfile 내부
 → 헤더 프로필 이미지, 프로필 상세 화면 등 같은 캐시를 쓰는 UI가 즉시 반영
 → 모달 닫힘
 ```
+
+## 13. 댓글 조회 흐름
+
+댓글은 DB에서는 평평한 구조로 저장하고, 렌더링할 때 트리 구조로 바꿉니다.
+
+```text
+포스트 상세 페이지 진입
+→ CommentList 렌더링
+→ useCommentsData(postId) 호출
+→ Supabase comment 테이블에서 post_id 기준 조회
+→ author profile도 함께 join
+→ created_at 오름차순 정렬
+
+응답 도착
+→ comments 배열은 flat 형태
+→ toNestedComments(comments) 실행
+→ root_comment_id가 없으면 루트 댓글
+→ root_comment_id가 있으면 해당 루트 댓글의 children에 추가
+→ parentComment도 함께 찾아 붙임
+
+결과
+→ 루트 댓글 아래에 대댓글이 달린 형태로 렌더링
+```
