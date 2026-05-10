@@ -362,3 +362,32 @@ updateProfile 내부
 결과
 → 루트 댓글 아래에 대댓글이 달린 형태로 렌더링
 ```
+
+## 14. 댓글 작성/대댓글 작성 흐름
+
+```text
+사용자가 댓글 입력창에 내용 작성
+→ 작성 버튼 클릭
+→ CommentEditor에서 props.type 확인
+
+CREATE 모드면
+→ createComment({ postId, content }) 호출
+
+REPLY 모드면
+→ createComment({
+     postId,
+     content,
+     parentCommentId,
+     rootCommentId
+   }) 호출
+
+Supabase comment insert 성공
+→ useCreateComment onSuccess 실행
+→ 현재 포스트의 댓글 캐시 QUERY_KEYS.comment.post(postId) 가져옴
+→ 현재 로그인 사용자의 profile도 함께 사용
+→ 새 댓글 객체에 author: profile 붙여 캐시에 추가
+→ 댓글 목록 즉시 갱신
+→ REPLY 모드면 입력창 닫힘
+```
+
+여기서 중요한 건 댓글 생성 후 다시 fetch하지 않고, 캐시 배열에 직접 붙인다는 점입니다.
