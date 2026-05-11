@@ -391,3 +391,32 @@ Supabase comment insert 성공
 ```
 
 여기서 중요한 건 댓글 생성 후 다시 fetch하지 않고, 캐시 배열에 직접 붙인다는 점입니다.
+
+## 15. 댓글 수정/삭제 흐름
+
+수정:
+
+```text
+내 댓글에서 수정 클릭
+→ CommentItem 내부 상태 isEditing = true
+→ CommentEditor EDIT 모드 렌더링
+→ 수정 후 저장
+→ updateComment({ id, content }) mutation 실행
+→ DB update 성공
+→ comment.post(postId) 캐시를 map 돌면서 해당 댓글만 교체
+→ 화면 즉시 반영
+→ 수정창 닫힘
+```
+
+삭제:
+
+```text
+내 댓글에서 삭제 클릭
+→ Alert 모달 open
+→ 확인 클릭
+→ deleteComment(id) mutation 실행
+→ DB delete 성공
+→ comment.post(postId) 캐시를 filter로 갱신
+→ 해당 댓글 제거
+→ 화면 즉시 반영
+```
