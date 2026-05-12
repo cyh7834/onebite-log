@@ -420,3 +420,35 @@ Supabase comment insert 성공
 → 해당 댓글 제거
 → 화면 즉시 반영
 ```
+
+## 16. 테마 변경 흐름
+
+테마도 Zustand store를 구독하는 방식이라 자동 반영됩니다.
+
+```text
+헤더의 ThemeButton 클릭
+→ Popover 열림
+→ 사용자가 system / dark / light 중 선택
+→ setTheme(theme) 호출
+→ Zustand theme store의 action 실행
+
+action 내부
+→ document.documentElement 가져옴
+→ 기존 dark, light 클래스 제거
+→ 선택이 system이면 matchMedia로 OS 테마 확인
+→ dark 또는 light 클래스 추가
+→ store.theme 값도 함께 갱신
+
+그다음
+→ useTheme()을 쓰는 컴포넌트는 새 theme 값으로 리렌더링
+→ persist 미들웨어가 theme 값을 저장
+→ 새로고침 후에도 유지
+```
+
+즉, 이 기능도:
+
+- DOM 반영은 `setTheme` 액션이 직접 수행
+- 상태 반영은 Zustand store가 담당
+- 유지성은 `persist`가 담당
+
+으로 역할이 나뉩니다.
