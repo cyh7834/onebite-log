@@ -452,3 +452,22 @@ action 내부
 - 유지성은 `persist`가 담당
 
 으로 역할이 나뉩니다.
+
+## 전체 구조 요약
+
+이 프로젝트의 모든 기능은 거의 같은 패턴으로 움직입니다.
+
+```text
+사용자 액션 발생
+→ 이벤트 핸들러 또는 Provider가 감지
+→ Zustand 또는 TanStack Query 상태 변경
+→ 그 상태를 구독 중인 컴포넌트 자동 리렌더링
+→ UI가 최신 상태로 반영
+```
+
+차이는 다음과 같습니다.
+
+- 세션, 모달, 테마: Zustand 구독
+- 포스트, 댓글, 프로필: TanStack Query 캐시 구독
+- 세션 변화의 원천: Supabase Auth
+- 데이터 변화의 원천: Supabase DB / Storage / RPC
